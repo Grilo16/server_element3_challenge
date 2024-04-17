@@ -19,7 +19,7 @@ func NewUserRepository() *UserRepository {
 	}
 }
 
-func (ur UserRepository) GetUserById(id string) (*User, error) {
+func (ur UserRepository) GetUserById(id int) (*User, error) {
 	query := `
 		SELECT * FROM users WHERE id = @id
 	`

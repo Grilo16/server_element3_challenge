@@ -19,7 +19,7 @@ func NewUserFilesRepository() *UserFilesRepository {
 	}
 }
 
-func (ur UserFilesRepository) GetFileByFileId(id string) (*UserFiles, error) {
+func (ur UserFilesRepository) GetFileByFileId(id int) (*UserFiles, error) {
 	query := `
 		SELECT * FROM user_files WHERE id = @id
 	`
@@ -33,7 +33,7 @@ func (ur UserFilesRepository) GetFileByFileId(id string) (*UserFiles, error) {
 	return userFile, nil
 }
 
-func (ur UserFilesRepository) GetFilesByUserId(userId string) ([]UserFiles, error) {
+func (ur UserFilesRepository) GetFilesByUserId(userId int) ([]UserFiles, error) {
 	var userFiles []UserFiles
 
 	query := "SELECT * FROM user_files WHERE user_id = @userId"
@@ -55,7 +55,7 @@ func (ur UserFilesRepository) GetFilesByUserId(userId string) ([]UserFiles, erro
 	return userFiles, nil
 }
 
-func (ur UserFilesRepository) DeleteFileById(id string) string {
+func (ur UserFilesRepository) DeleteFileById(id int) string {
 	query := `
 		DELETE FROM user_files WHERE id = @id
 	`

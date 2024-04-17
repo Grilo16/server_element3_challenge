@@ -4,8 +4,7 @@ type UserFilesService struct {
 	userFilesRepository *UserFilesRepository
 }
 
-func NewUserFilesService() *UserFilesService {
-	userFilesRepository := NewUserFilesRepository()
+func NewUserFilesService(userFilesRepository *UserFilesRepository) *UserFilesService {
 	return &UserFilesService{
 		userFilesRepository: userFilesRepository,
 	}
@@ -19,7 +18,7 @@ func (ufs *UserFilesService) SaveUserFile(userFile *UserFiles) (*UserFiles, erro
 	return userFile, nil
 }
 
-func (ufs *UserFilesService) GetUserFileById(id string) (*UserFiles, error) {
+func (ufs *UserFilesService) GetUserFileById(id int) (*UserFiles, error) {
 	userFile, err := ufs.userFilesRepository.GetFileByFileId(id)
 	if err != nil {
 		return nil, err
@@ -27,7 +26,7 @@ func (ufs *UserFilesService) GetUserFileById(id string) (*UserFiles, error) {
 	return userFile, nil
 }
 
-func (ufs *UserFilesService) GetAllUserFilesByUserId(userId string) ([]UserFiles, error) {
+func (ufs *UserFilesService) GetAllUserFilesByUserId(userId int) ([]UserFiles, error) {
 	userFiles, err := ufs.userFilesRepository.GetFilesByUserId(userId)
 	if err != nil {
 		return nil, err
@@ -35,7 +34,7 @@ func (ufs *UserFilesService) GetAllUserFilesByUserId(userId string) ([]UserFiles
 	return userFiles, nil
 }
 
-func (ufs *UserFilesService) DeleteUserFileById(id string) string {
+func (ufs *UserFilesService) DeleteUserFileById(id int) string {
 	result := ufs.userFilesRepository.DeleteFileById(id)
 	return result
 }

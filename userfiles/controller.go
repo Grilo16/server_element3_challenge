@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/Grilo16/server_element3_challenge/user"
-	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,23 +15,28 @@ type UserFilesController struct {
 	userService *user.UserService
 }
 
-func NewUserFilesController() *UserFilesController {
-	userFilesService := NewUserFilesService()
-	userService := user.NewUserService()
+func NewUserFilesController(userFilesService *UserFilesService, userService *user.UserService) *UserFilesController {
 	return &UserFilesController{
 		userFilesService: userFilesService,
 		userService: userService,
 	}
 }
 
+func (ufc *UserFilesController) InitializeRoutes(router *gin.Engine, privateRoutes *gin.RouterGroup) {
+	privateRoutes.GET("files", ufc.getAllUserFilesHanlder)
+	privateRoutes.POST("files", ufc.saveUserFileHander)
+	privateRoutes.GET("files/:id", ufc.downloadSavedFileHandler)
+	privateRoutes.DELETE("files/:id", ufc.deleteSavedFileHandler)
+}
+
 func (ufc *UserFilesController) getAllUserFilesHanlder(ctx *gin.Context) {
-	claims := jwt.ExtractClaims(ctx)
-	user, err := ufc.userService.GetUserByEmail(claims["identity"].(string))
+	user, err := ufc.userService.GetAuthenticatedUser(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
-	userFiles, err := ufc.userFilesService.GetAllUserFilesByUserId(fmt.Sprint(user.Id))
+
+	userFiles, err := ufc.userFilesService.GetAllUserFilesByUserId(user.Id)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "Error retrieving logs " + err.Error()})
 		return
@@ -41,9 +46,7 @@ func (ufc *UserFilesController) getAllUserFilesHanlder(ctx *gin.Context) {
 
 
 func (ufc *UserFilesController) saveUserFileHander(ctx *gin.Context) {
-	claims := jwt.ExtractClaims(ctx)
-
-	user, err := ufc.userService.GetUserByEmail(claims["identity"].(string))
+	user, err := ufc.userService.GetAuthenticatedUser(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
@@ -72,8 +75,13 @@ func (ufc *UserFilesController) saveUserFileHander(ctx *gin.Context) {
 }
 
 func (ufc *UserFilesController) downloadSavedFileHandler(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
 
-	id := ctx.Param("id")
 
 	userFile, err := ufc.userFilesService.GetUserFileById(id)
 	if err != nil {
@@ -87,7 +95,12 @@ func (ufc *UserFilesController) downloadSavedFileHandler(ctx *gin.Context) {
 }
 
 func (ufc *UserFilesController) deleteSavedFileHandler(ctx *gin.Context) {
-	id := ctx.Param("id")
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
 	userFile, err := ufc.userFilesService.GetUserFileById(id)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "Error fetching userfile"})

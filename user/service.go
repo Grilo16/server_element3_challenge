@@ -3,6 +3,8 @@ package user
 import (
 	"time"
 
+	jwt "github.com/appleboy/gin-jwt/v2"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -10,25 +12,25 @@ type UserService struct {
 	userRepository *UserRepository
 }
 
-func NewUserService() *UserService {
-	userRepository := NewUserRepository()
+func NewUserService(userRepository *UserRepository) *UserService {
 	return &UserService{
 		userRepository: userRepository,
 	}
 }
 
-func (us *UserService) Login(email string, password string) (*User, error) {
-	user, err :=us.GetUserByEmail(email)
+func (us *UserService) GetAuthenticatedUser(ctx *gin.Context) (*User, error) {
+	claims := jwt.ExtractClaims(ctx)
+	idFloat64 := claims["identity"].(float64)
+	userId := int(idFloat64)
+	user, err := us.GetUserById(userId)
 	if err != nil {
-		return nil, err
-	}
-	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-func (us *UserService) GetUserById(id string) (*User, error) {
+
+func (us *UserService) GetUserById(id int) (*User, error) {
 	user, err := us.userRepository.GetUserById(id)
 
 	if err != nil {
@@ -63,7 +65,7 @@ func (us *UserService) DeleteUserById(id string) string {
 	return result
 }
 
-func (us *UserService) EditUserById(id string, updates map[string]interface{}) (*User, error) {
+func (us *UserService) EditUserById(id int, updates map[string]interface{}) (*User, error) {
 	
 	user, err := us.userRepository.GetUserById(id)
 	if err != nil {

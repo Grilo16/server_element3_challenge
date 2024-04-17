@@ -15,7 +15,7 @@ type UserAuth struct{
 	Password string `json:"password,omitempty"`
 }
 
-func InitializeAuthMiddleware() *jwt.GinJWTMiddleware {
+func InitializeAuthMiddleware(userService *user.UserService) *jwt.GinJWTMiddleware {
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
 		Realm:       "test zone",
 		Key:         []byte("secret key"),
@@ -24,9 +24,10 @@ func InitializeAuthMiddleware() *jwt.GinJWTMiddleware {
 		IdentityKey: jwt.IdentityKey,
 
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
-			if v, ok := data.(*user.User); ok {
+			if user, ok := data.(*user.User); ok {
 				return jwt.MapClaims{
-					jwt.IdentityKey: v.Email,
+					jwt.IdentityKey: int(user.Id),
+					
 				}
 			}
 			return jwt.MapClaims{}
@@ -34,8 +35,10 @@ func InitializeAuthMiddleware() *jwt.GinJWTMiddleware {
 
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
+			idFloat64 := claims[jwt.IdentityKey].(float64)
+			id := int(idFloat64)
 			return &user.User{
-				Email: claims[jwt.IdentityKey].(string),
+				Id: id,
 			}
 		},
 
@@ -46,7 +49,6 @@ func InitializeAuthMiddleware() *jwt.GinJWTMiddleware {
 			}
 			email := loginVals.Email
 			password := loginVals.Password
-			userService := user.NewUserService()
 			user, err := userService.GetUserByEmail(email)
 			if err != nil {
 				return nil, jwt.ErrFailedAuthentication

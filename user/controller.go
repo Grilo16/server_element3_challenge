@@ -12,17 +12,25 @@ type UserController struct {
 	userService *UserService
 }
 
-func NewUserController() *UserController {
-	userService := NewUserService()
+func NewUserController(userService *UserService) *UserController {
 	return &UserController{
 		userService: userService,
 	}
 }
 
-func (uc *UserController) getUserByEmailHandler(ctx *gin.Context) {
-	claims := jwt.ExtractClaims(ctx)
+func (uc *UserController) InitializeRoutes(router *gin.Engine, privateRoutes *gin.RouterGroup) {
+	// Public Routes 
+	router.POST("users", uc.createNewUserHandler)
 
-	user, err := uc.userService.GetUserByEmail(claims["identity"].(string))
+	// Private Routes
+	privateRoutes.GET("users", uc.getAllUsersHandler)
+	privateRoutes.GET("users/my-details", uc.getMyUserDetailsHandler)
+	privateRoutes.DELETE("users", uc.deleteUserByIdHandler)
+	privateRoutes.PATCH("users", uc.editUserByIdHandler)
+}
+
+func (uc *UserController) getMyUserDetailsHandler(ctx *gin.Context) {
+	user, err := uc.userService.GetAuthenticatedUser(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
@@ -30,6 +38,20 @@ func (uc *UserController) getUserByEmailHandler(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, user)
 }
+
+
+
+// func (uc *UserController) getUserByEmailHandler(ctx *gin.Context) {
+// 	claims := jwt.ExtractClaims(ctx)
+// 	userId := claims["identity"].(int)
+// 	user, err := uc.userService.GetUserByEmail(userId)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+// 		return
+// 	}
+
+// 	ctx.JSON(http.StatusOK, user)
+// }
 
 func (uc *UserController) getAllUsersHandler(ctx *gin.Context) {
 	users, err := uc.userService.GetAllUsers()
@@ -52,9 +74,7 @@ func (uc *UserController) deleteUserByIdHandler(ctx *gin.Context) {
 }
 
 func (uc *UserController) editUserByIdHandler(ctx *gin.Context) {
-	claims := jwt.ExtractClaims(ctx)
-
-	user, err := uc.userService.GetUserByEmail(claims["identity"].(string))
+	user, err := uc.userService.GetAuthenticatedUser(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
@@ -66,7 +86,7 @@ func (uc *UserController) editUserByIdHandler(ctx *gin.Context) {
         return
 	}
 	
-	editedUser, err := uc.userService.EditUserById(fmt.Sprint(user.Id), editData)
+	editedUser, err := uc.userService.EditUserById(user.Id, editData)
 	if err != nil {
 		fmt.Println("Error creating user:", err)
         ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to edit user"})
