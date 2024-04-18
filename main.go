@@ -15,14 +15,15 @@ import (
 )
 
 func main() {
+	// connString := "server=localhost;database=element3_challenge"
+	
 	driver := "sqlserver"
-	connString := "server=localhost;database=element3_challenge"
-
+	connString := "server=sqlcontainer,1433;database=master;user=SA;password=StrongP4ssword!"
+	
 	db, err := sql.Open(driver, connString)
 	if err != nil {
 		fmt.Println("Error connecting to db")
 	}
-	
 	database.Initialize(db)
 	ctx := context.Background()
 	
