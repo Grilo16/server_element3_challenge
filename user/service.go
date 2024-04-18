@@ -60,7 +60,7 @@ func (us *UserService) GetAllUsers() ([]User, error) {
 	return users, nil
 }
 
-func (us *UserService) DeleteUserById(id string) string {
+func (us *UserService) DeleteUserById(id int) string {
 	result := us.userRepository.DeleteUserById(id)
 	return result
 }

@@ -3,8 +3,6 @@ package userfiles
 import (
 	"context"
 	"database/sql"
-
-	"github.com/Grilo16/server_element3_challenge/database"
 )
 
 type UserFilesRepository struct {
@@ -12,10 +10,10 @@ type UserFilesRepository struct {
 	ctx context.Context
 }
 
-func NewUserFilesRepository() *UserFilesRepository {
+func NewUserFilesRepository(db *sql.DB, ctx context.Context) *UserFilesRepository {
 	return &UserFilesRepository{
-		db:  database.DB,
-		ctx: context.Background(),
+		db: db,
+		ctx: ctx,
 	}
 }
 

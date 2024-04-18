@@ -1,6 +1,10 @@
 package main
 
 import (
+	"context"
+	"database/sql"
+	"fmt"
+
 	"github.com/Grilo16/server_element3_challenge/database"
 	"github.com/Grilo16/server_element3_challenge/middleware"
 	"github.com/Grilo16/server_element3_challenge/user"
@@ -11,11 +15,20 @@ import (
 )
 
 func main() {
+	driver := "sqlserver"
+	connString := "server=localhost;database=element3_challenge"
 
-	database.Initialize()
+	db, err := sql.Open(driver, connString)
+	if err != nil {
+		fmt.Println("Error connecting to db")
+	}
+	
+	database.Initialize(db)
+	ctx := context.Background()
+	
 	// Initialize Repositories
-	userRepository := user.NewUserRepository()
-	userFilesRepository := userfiles.NewUserFilesRepository()
+	userRepository := user.NewUserRepository(db, ctx)
+	userFilesRepository := userfiles.NewUserFilesRepository(db, ctx)
 	
 	// Initialize Services
 	userServices := user.NewUserService(userRepository)

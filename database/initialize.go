@@ -7,23 +7,13 @@ import (
 	_ "github.com/microsoft/go-mssqldb"
 )
 
-var DB *sql.DB
 
-func Initialize() {
-	driver := "sqlserver"
-	connString := "server=localhost;database=element3_challenge"
-
-	var err error
-	DB, err = sql.Open(driver, connString)
-	if err != nil {
-		fmt.Println("Error connecting to db")
-	}
-
-	createUserTable()
-	createUserFilesTable()
+func Initialize(db *sql.DB) {
+	createUserTable(db)
+	createUserFilesTable(db)
 }
 
-func createUserTable() {
+func createUserTable(db *sql.DB) {
 	query := `
 	IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Users')
     create table Users (
@@ -35,13 +25,13 @@ func createUserTable() {
 		date_of_birth Date
     )
 	`
-	_, err := DB.Exec(query)
+	_, err := db.Exec(query)
 	if err != nil {
 		fmt.Println("error: ", err)
 	}
 }
 
-func createUserFilesTable() {
+func createUserFilesTable(db *sql.DB) {
 	query := `
 	IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='user_files')
     create table user_files (
@@ -52,7 +42,7 @@ func createUserFilesTable() {
 		FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
     )
 	`
-	_, err := DB.Exec(query)
+	_, err := db.Exec(query)
 	if err != nil {
 		fmt.Println("error: ", err)
 	}

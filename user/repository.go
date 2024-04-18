@@ -3,8 +3,6 @@ package user
 import (
 	"context"
 	"database/sql"
-
-	"github.com/Grilo16/server_element3_challenge/database"
 )
 
 type UserRepository struct {
@@ -12,10 +10,10 @@ type UserRepository struct {
 	ctx context.Context
 }
 
-func NewUserRepository() *UserRepository {
+func NewUserRepository(db *sql.DB, ctx context.Context) *UserRepository {
 	return &UserRepository{
-		db:  database.DB,
-		ctx: context.Background(),
+		db:  db,
+		ctx: ctx,
 	}
 }
 
@@ -49,7 +47,7 @@ func (ur UserRepository) GetUserByEmail(email string) (*User, error) {
 func (ur UserRepository) GetAllUsers() ([]User, error) {
 	var users []User
 
-	query := "select * from users"
+	query := "SELECT * FROM users"
 
 	rows, err := ur.db.QueryContext(ur.ctx, query)
 
@@ -68,7 +66,7 @@ func (ur UserRepository) GetAllUsers() ([]User, error) {
 	return users, nil
 }
 
-func (ur UserRepository) DeleteUserById(id string) string {
+func (ur UserRepository) DeleteUserById(id int) string {
 	query := `
 		DELETE FROM Users WHERE id = @id
 	`
@@ -83,7 +81,7 @@ func (ur UserRepository) EditUser(user User) (*User, error) {
 	query := `
 		UPDATE Users SET first_name = @firstName, last_name = @lastName, email = @email, password = @password, date_of_birth = @dateOfBirth WHERE id = @id
 	`
-	_, err := ur.db.Exec(query, sql.Named("firstName", user.FirstName), sql.Named("lastName", user.LastName), sql.Named("email", user.Email), sql.Named("dateOfBirth", user.DateOfBirth), sql.Named("id", user.Id), sql.Named("password", user.Password))
+	_, err := ur.db.Exec(query, sql.Named("firstName", user.FirstName), sql.Named("lastName", user.LastName), sql.Named("email", user.Email), sql.Named("password", user.Password), sql.Named("dateOfBirth", user.DateOfBirth), sql.Named("id", user.Id))
 	if err != nil {
 		return nil, err
 	}
