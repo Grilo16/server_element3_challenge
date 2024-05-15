@@ -2,7 +2,6 @@ package user
 
 import (
 	"database/sql"
-	"time"
 )
 
 type User struct {
@@ -10,23 +9,21 @@ type User struct {
 	FirstName string `json:"firstName,omitempty" db:"first_name"`
 	LastName string `json:"lastName,omitempty" db:"last_name"`
 	Email string `json:"email,omitempty" db:"email"`
-	DateOfBirth time.Time `json:"dateOfBirth,omitempty" db:"date_of_birth"`
-	Password string `json:"password,omitempty" db:"password"`
+	Sub string `json:"sub,omitempty" db:"sub"`
 }
 
-func NewUser(firstName string, lastName string, email string, dateOfBirth time.Time, password string) *User {
+func NewUser(firstName string, lastName string, email string, sub string) *User {
 	return &User{
 		FirstName: firstName, 
 		LastName: lastName, 
 		Email: email, 
-		DateOfBirth: dateOfBirth, 
-		Password: password, 
+		Sub: sub,
 	}
 }
 
 func FromRow(row *sql.Row) (*User, error) {
 	var user User
-	err := row.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.DateOfBirth)
+	err := row.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Sub)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +32,7 @@ func FromRow(row *sql.Row) (*User, error) {
 
 func FromRows(rows *sql.Rows) (*User, error) {
 	var user User
-	err := rows.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.DateOfBirth)
+	err := rows.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Sub)
 	if err != nil {
 		return nil, err
 	}

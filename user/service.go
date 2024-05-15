@@ -1,11 +1,9 @@
 package user
 
 import (
-	"time"
+	"errors"
 
-	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService struct {
@@ -18,11 +16,13 @@ func NewUserService(userRepository *UserRepository) *UserService {
 	}
 }
 
+
 func (us *UserService) GetAuthenticatedUser(ctx *gin.Context) (*User, error) {
-	claims := jwt.ExtractClaims(ctx)
-	idFloat64 := claims["identity"].(float64)
-	userId := int(idFloat64)
-	user, err := us.GetUserById(userId)
+	userSub, ok:= ctx.Get("sub")
+	if !ok {
+		return nil, errors.New("User sub not found")
+	}
+	user, err := us.GetUserBySub(userSub.(string))
 	if err != nil {
 		return nil, err
 	}
@@ -30,6 +30,15 @@ func (us *UserService) GetAuthenticatedUser(ctx *gin.Context) (*User, error) {
 }
 
 
+func (us *UserService) GetUserBySub(sub string) (*User, error) {
+	user, err := us.userRepository.GetUserBySub(sub)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
 func (us *UserService) GetUserById(id int) (*User, error) {
 	user, err := us.userRepository.GetUserById(id)
 
@@ -80,27 +89,6 @@ func (us *UserService) EditUserById(id int, updates map[string]interface{}) (*Us
 			user.LastName = value.(string)
 		case "email":
 			user.Email = value.(string)
-		case "password":
-			newPassword, ok := value.(string)
-			if !ok {
-				return nil, err
-			}
-			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), 3)
-			if err !=nil {
-				return nil, err
-			}
-			user.Password = string(hashedPassword)
-		case "dateOfBirth":
-			dobString, ok := value.(string)
-			if !ok {
-				return nil, err
-			}
-			dob, err := time.Parse("2006-01-02", dobString)
-			if err != nil {
-				return nil, err
-			}
-			
-		user.DateOfBirth = dob
 		}
 	}
 
@@ -113,13 +101,6 @@ func (us *UserService) EditUserById(id int, updates map[string]interface{}) (*Us
 }
 
 func (us *UserService) CreateNewUser(user *User) (*User, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 3)
-	if err !=nil {
-		return nil, err
-	}
-	
-	
-	user.Password = string(hashedPassword)
 	newUser, err := us.userRepository.CreateNewUser(*user)
 	if err != nil {
 		return nil, err

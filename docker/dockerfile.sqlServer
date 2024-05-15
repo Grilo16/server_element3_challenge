@@ -1,0 +1,14 @@
+FROM mcr.microsoft.com/mssql/server:2022-latest
+
+USER root
+RUN apt-get update && apt-get install -y netcat
+
+COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
+RUN chmod +x /usr/local/bin/wait-for-it.sh
+
+USER mssql
+COPY init.sql /usr/src/app/init.sql
+
+
+
+CMD /bin/bash -c "/opt/mssql/bin/sqlservr & /usr/local/bin/wait-for-it.sh localhost 1433 /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P 'StrongP4ssword!' -d master -i /usr/src/app/init.sql && wait"

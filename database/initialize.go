@@ -21,8 +21,7 @@ func createUserTable(db *sql.DB) {
 		first_name VARCHAR(255),
 		last_name VARCHAR(255),
 		email VARCHAR(255),
-		password VARCHAR(255),
-		date_of_birth Date
+		sub VARCHAR(255) UNIQUE,
     )
 	`
 	_, err := db.Exec(query)

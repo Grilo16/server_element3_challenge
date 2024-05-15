@@ -36,7 +36,7 @@ func (uc *UserController) InitializeRoutes(router *gin.Engine, privateRoutes *gi
 func (uc *UserController) createNewUserAccountHandler(ctx *gin.Context) {
 	var newUser User
 	if err := ctx.BindJSON(&newUser); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
 	}
 	user, err := uc.userService.CreateNewUser(&newUser)
@@ -51,7 +51,7 @@ func (uc *UserController) createNewUserAccountHandler(ctx *gin.Context) {
 func (uc *UserController) getMyUserDetailsHandler(ctx *gin.Context) {
 	user, err := uc.userService.GetAuthenticatedUser(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err})
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, user)
@@ -75,6 +75,7 @@ func (uc *UserController) editMyUserDetailsHandler(ctx *gin.Context) {
         ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to edit user"})
         return
     }
+
 
 	ctx.JSON(http.StatusOK, editedUser)
 }

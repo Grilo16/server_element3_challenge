@@ -4,7 +4,6 @@ import (
 	"context"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/Grilo16/server_element3_challenge/user"
@@ -25,13 +24,11 @@ func TestUserRepository_GetUserById(t *testing.T) {
 		 FirstName:   "John",
 		 LastName:    "Doe",
 		 Email:       "john.doe@example.com",
-		 Password:    "password",
-		 DateOfBirth: time.Now(),
 	 }
  
 	 // Expectation: Mock the row returned by QueryRowContext
 	 rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "email", "password", "date_of_birth"}).
-		 AddRow(expectedUser.Id, expectedUser.FirstName, expectedUser.LastName, expectedUser.Email,  expectedUser.Password, expectedUser.DateOfBirth)
+		 AddRow(expectedUser.Id, expectedUser.FirstName, expectedUser.LastName, expectedUser.Email)
  
 	 // Mock the query and return the mocked rows
 	 mock.ExpectQuery("^SELECT \\* FROM users WHERE id = @id$").
@@ -71,11 +68,11 @@ func TestUserRepository_GetUserByEmail(t *testing.T) {
 		FirstName:   "John",
 		LastName:    "Doe",
 		Email:       "john.doe@example.com",
-		DateOfBirth: time.Now(),
-		Password:    "password",
+		
+		
 	}
 	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "email", "password", "date_of_birth"}).
-	AddRow(expectedUser.Id, expectedUser.FirstName, expectedUser.LastName, expectedUser.Email,  expectedUser.Password, expectedUser.DateOfBirth)
+	AddRow(expectedUser.Id, expectedUser.FirstName, expectedUser.LastName, expectedUser.Email,   )
 
 // Mock the query and return the mocked rows
 	mock.ExpectQuery("^SELECT \\* FROM users WHERE email = @email$").
@@ -111,22 +108,20 @@ func TestUserRepository_GetAllUsers(t *testing.T) {
 			FirstName:   "John",
 			LastName:    "Doe",
 			Email:       "john.doe@example.com",
-			DateOfBirth: time.Now(),
-			Password:    "password",
+			
+			
 		},
 		{
 			Id:          2,
 			FirstName:   "Jane",
 			LastName:    "Smith",
 			Email:       "jane.smith@example.com",
-			DateOfBirth: time.Now(),
-			Password:    "password123",
 		},
 	}
 	
 	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "email", "password", "date_of_birth"}).
-	AddRow(expectedUsers[0].Id, expectedUsers[0].FirstName, expectedUsers[0].LastName, expectedUsers[0].Email,  expectedUsers[0].Password, expectedUsers[0].DateOfBirth).
-	AddRow(expectedUsers[1].Id, expectedUsers[1].FirstName, expectedUsers[1].LastName, expectedUsers[1].Email,  expectedUsers[1].Password, expectedUsers[1].DateOfBirth)
+	AddRow(expectedUsers[0].Id, expectedUsers[0].FirstName, expectedUsers[0].LastName, expectedUsers[0].Email,  ).
+	AddRow(expectedUsers[1].Id, expectedUsers[1].FirstName, expectedUsers[1].LastName, expectedUsers[1].Email,  )
 
 	// Mock the query and return the mocked rows
 	mock.ExpectQuery("SELECT \\* FROM users").
@@ -182,14 +177,14 @@ func TestUserRepository_EditUser(t *testing.T) {
 		FirstName:   "John",
 		LastName:    "Doe",
 		Email:       "john.doe@example.com",
-		Password:    "password",
-		DateOfBirth: time.Now(),
+		
+		
 	}
 
 	// "^SELECT \\* FROM users WHERE email = @email$"
 	// Expectation
 	mock.ExpectExec("^UPDATE Users SET first_name = @firstName, last_name = @lastName, email = @email, password = @password, date_of_birth = @dateOfBirth WHERE id = @id$").
-    WithArgs(mockUser.FirstName, mockUser.LastName, mockUser.Email, mockUser.Password, mockUser.DateOfBirth, mockUser.Id).
+    WithArgs(mockUser.FirstName, mockUser.LastName, mockUser.Email, mockUser.Id).
     WillReturnResult(sqlmock.NewResult(0, 1))
 
 	// Repository setup
@@ -219,20 +214,18 @@ func TestUserRepository_CreateNewUser(t *testing.T) {
 		FirstName:   "John",
 		LastName:    "Doe",
 		Email:       "john.doe@example.com",
-		DateOfBirth: time.Now(),
-		Password:    "password",
+		
+		
 	}
 	expectedUser := &user.User{
 		Id:          1,
 		FirstName:   "John",
 		LastName:    "Doe",
 		Email:       "john.doe@example.com",
-		DateOfBirth: mockUser.DateOfBirth,
-		Password:    "password",
 	}
 
 	mock.ExpectQuery("INSERT INTO Users (.+) VALUES (.+)").WillReturnRows(sqlmock.NewRows([]string{"id", "first_name", "last_name", "email", "date_of_birth", "password"}).
-	AddRow(expectedUser.Id, expectedUser.FirstName, expectedUser.LastName, expectedUser.Email, expectedUser.Password, expectedUser.DateOfBirth))
+	AddRow(expectedUser.Id, expectedUser.FirstName, expectedUser.LastName, expectedUser.Email,  ))
 	
 	repo := user.NewUserRepository(db, ctx)
 

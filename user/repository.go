@@ -17,6 +17,19 @@ func NewUserRepository(db *sql.DB, ctx context.Context) *UserRepository {
 	}
 }
 
+func (ur UserRepository) GetUserBySub(sub string) (*User, error) {
+	query := `
+		SELECT * FROM users WHERE sub = @sub
+	`
+	row := ur.db.QueryRowContext(ur.ctx, query, sql.Named("sub", sub))
+	user, err := FromRow(row)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
 func (ur UserRepository) GetUserById(id int) (*User, error) {
 	query := `
 		SELECT * FROM users WHERE id = @id
@@ -79,9 +92,9 @@ func (ur UserRepository) DeleteUserById(id int) string {
 
 func (ur UserRepository) EditUser(user User) (*User, error) {
 	query := `
-		UPDATE Users SET first_name = @firstName, last_name = @lastName, email = @email, password = @password, date_of_birth = @dateOfBirth WHERE id = @id
+		UPDATE Users SET first_name = @firstName, last_name = @lastName, email = @email, WHERE id = @id
 	`
-	_, err := ur.db.Exec(query, sql.Named("firstName", user.FirstName), sql.Named("lastName", user.LastName), sql.Named("email", user.Email), sql.Named("password", user.Password), sql.Named("dateOfBirth", user.DateOfBirth), sql.Named("id", user.Id))
+	_, err := ur.db.Exec(query, sql.Named("firstName", user.FirstName), sql.Named("lastName", user.LastName), sql.Named("email", user.Email), sql.Named("id", user.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -91,9 +104,9 @@ func (ur UserRepository) EditUser(user User) (*User, error) {
 
 func (ur UserRepository) CreateNewUser(user User) (*User, error) {
 	query := `
-	INSERT INTO Users (first_name, last_name, email, password, date_of_birth) OUTPUT INSERTED.* VALUES (@firstName, @lastName, @email, @password, @dateOfBirth)
+	INSERT INTO Users (first_name, last_name, email, sub) OUTPUT INSERTED.* VALUES (@firstName, @lastName, @email, @sub)
 `
-	row := ur.db.QueryRow(query, sql.Named("firstName", user.FirstName), sql.Named("lastName", user.LastName), sql.Named("email", user.Email), sql.Named("password", user.Password), sql.Named("dateOfBirth", user.DateOfBirth))
+	row := ur.db.QueryRow(query, sql.Named("firstName", user.FirstName), sql.Named("lastName", user.LastName), sql.Named("email", user.Email), sql.Named("sub", user.Sub))
 
 	newUser, err := FromRow(row)
 	if err != nil {

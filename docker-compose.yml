@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    build:
+      context: ./docker
+      dockerfile: dockerfile.sqlServer
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "StrongP4ssword!"
+    volumes:
+      - sql_data:/var/opt/mssql
+    ports:
+      - "1533:1433"
+    networks:
+      - docker_network
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "SA", "-P", "StrongP4ssword!", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    build:
+      context: ./docker
+      dockerfile: dockerfile.Keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8081:8080"
+    depends_on:
+      sqlserver:
+       condition: service_healthy
+    networks:
+      - docker_network
+    command: ["start-dev"] 
+
+  e3-server:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      sqlserver:
+       condition: service_healthy 
+    networks:
+      - docker_network
+
+networks:
+  docker_network:
+
+volumes:
+  sql_data:

@@ -3,7 +3,6 @@ package user
 import (
 	"database/sql/driver"
 	"testing"
-	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/Grilo16/server_element3_challenge/user"
@@ -15,16 +14,14 @@ func TestNewUser(t *testing.T) {
 	firstName := "tom"
 	lastName := "Britton"
 	email := "tom@email.com"
-	dateOfBirth := time.Date(1990, time.January, 1, 0, 0, 0, 0, time.UTC)
-	password := "password"
+	sub := "mock-sub"
 	
-	user := user.NewUser(firstName, lastName, email, dateOfBirth, password)
+	user := user.NewUser(firstName, lastName, email, sub)
 
 	assert.Equal(t, firstName, user.FirstName)
 	assert.Equal(t, lastName, user.LastName)
 	assert.Equal(t, email, user.Email)
-	assert.Equal(t, dateOfBirth, user.DateOfBirth)
-	assert.Equal(t, password, user.Password)
+	assert.Equal(t, sub, user.Sub)
 }
 
 
@@ -35,7 +32,7 @@ func TestFromRow(t *testing.T) {
 
 	columns := []string{"id", "first_name", "last_name", "email", "password", "date_of_birth"}
 
-	expectedValues := []driver.Value{1, "John", "Doe", "john.doe@example.com", "password", time.Now()}
+	expectedValues := []driver.Value{1, "John", "Doe", "john.doe@example.com"}
 
 	mockRow := mock.NewRows(columns).AddRow(expectedValues...)
 
@@ -49,8 +46,6 @@ func TestFromRow(t *testing.T) {
 	assert.Equal(t, "John", user.FirstName)
 	assert.Equal(t, "Doe", user.LastName)
 	assert.Equal(t, "john.doe@example.com", user.Email)
-	assert.Equal(t, "password", user.Password)
-	assert.Equal(t, expectedValues[5], user.DateOfBirth)
 }
 
 
@@ -61,11 +56,11 @@ func TestFromRows(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	columns := []string{"id", "first_name", "last_name", "email", "password", "date_of_birth"}
+	columns := []string{"id", "first_name", "last_name", "email"}
 
 	expectedValues := [][]driver.Value{
-		{1, "John", "Doe", "john.doe@example.com", "password", time.Now()},
-		{2, "Jane", "Smith", "jane.smith@example.com", "password123", time.Now()},
+		{1, "John", "Doe", "john.doe@example.com"},
+		{2, "Jane", "Smith", "jane.smith@example.com"},
 	}
 
 	mockRows := mock.NewRows(columns)
@@ -92,7 +87,5 @@ func TestFromRows(t *testing.T) {
 		assert.Equal(t, expectedValues[i][1], user.FirstName)
 		assert.Equal(t, expectedValues[i][2], user.LastName)
 		assert.Equal(t, expectedValues[i][3], user.Email)
-		assert.Equal(t, expectedValues[i][4], user.Password)
-		assert.Equal(t, expectedValues[i][5], user.DateOfBirth)
 	}
 }

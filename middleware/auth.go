@@ -1,13 +1,21 @@
 package middleware
 
 import (
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/Grilo16/server_element3_challenge/user"
+	"github.com/Nerzal/gocloak/v13"
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
+)
+
+var client gocloak.GoCloak = *gocloak.NewClient("http://keycloak:8080")
+const (
+	realm      = "Element3"
+	clientID   = "e3-challenge-server"
+	clientSecret = "Q4xgljWZtLQGj50FTZqRC4rkEkBUfS0u"
 )
 
 type UserAuth struct{
@@ -23,41 +31,36 @@ func InitializeAuthMiddleware(userService *user.UserService) *jwt.GinJWTMiddlewa
 		MaxRefresh:  24 * time.Hour,
 		IdentityKey: jwt.IdentityKey,
 
-		PayloadFunc: func(data interface{}) jwt.MapClaims {
-			if user, ok := data.(*user.User); ok {
-				return jwt.MapClaims{
-					jwt.IdentityKey: int(user.Id),
-					
-				}
-			}
-			return jwt.MapClaims{}
-		},
-
-		IdentityHandler: func(c *gin.Context) interface{} {
-			claims := jwt.ExtractClaims(c)
-			idFloat64 := claims[jwt.IdentityKey].(float64)
-			id := int(idFloat64)
-			return &user.User{
-				Id: id,
-			}
-		},
-
 		Authenticator: func(c *gin.Context) (interface{}, error) {
+
+			grantType := "password"
+			clientID := clientID 
+			clientSecret := clientSecret 
+			scope := "openid profile email offline_access"
 			var loginVals UserAuth
+			
 			if err := c.ShouldBind(&loginVals); err != nil {
 				return "", jwt.ErrMissingLoginValues
 			}
-			email := loginVals.Email
-			password := loginVals.Password
-			user, err := userService.GetUserByEmail(email)
+
+			params := gocloak.TokenOptions{
+				GrantType: &grantType,
+				ClientID:  &clientID,
+				ClientSecret: &clientSecret,
+				Scope:    &scope,
+				Username: &loginVals.Email,
+				Password: &loginVals.Password,
+			}
+			// Authenticate against Keycloak
+			token, err := client.GetToken(c, realm, params)
 			if err != nil {
 				return nil, jwt.ErrFailedAuthentication
 			}
+			// Assuming token is not null and authentication is successful
+			fmt.Println(token)
+			return token, nil
 
-			if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-				return nil, jwt.ErrFailedAuthentication
-			}
-			return user, nil
+		
 		},
 
 		Authorizator: func(data interface{}, c *gin.Context) bool {
@@ -74,6 +77,7 @@ func InitializeAuthMiddleware(userService *user.UserService) *jwt.GinJWTMiddlewa
 				"message": message,
 			})
 		},
+
 		// TokenLookup is a string in the form of "<source>:<name>" that is used
 		// to extract token from the request.
 		// Optional. Default value "header:Authorization".
@@ -106,3 +110,20 @@ func InitializeAuthMiddleware(userService *user.UserService) *jwt.GinJWTMiddlewa
 
 	return authMiddleware
 }
+
+
+	// var loginVals UserAuth
+			// if err := c.ShouldBind(&loginVals); err != nil {
+			// 	return "", jwt.ErrMissingLoginValues
+			// }
+			// email := loginVals.Email
+			// password := loginVals.Password
+			// user, err := userService.GetUserByEmail(email)
+			// if err != nil {
+			// 	return nil, jwt.ErrFailedAuthentication
+			// }
+
+			// if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+			// 	return nil, jwt.ErrFailedAuthentication
+			// }
+			// return user, nil
